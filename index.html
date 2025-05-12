@@ -59,7 +59,6 @@
             messagingSenderId: "455712351090",
             appId: "1:455712351090:web:8df100aa7cc657bd31f3eb"
         };
-
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
@@ -102,28 +101,42 @@
                 dayHeader.textContent = dayData.day || `Day ${index + 1}`;
                 daySection.appendChild(dayHeader);
                 
-                // Check if time slots exist
-                if (!dayData.time_slot || !Array.isArray(dayData.time_slot) || dayData.time_slot.length === 0) {
+                // Check if time slots exist - now checking for object properties
+                if (!dayData.time_slot || typeof dayData.time_slot !== 'object') {
                     const noSlots = document.createElement('p');
                     noSlots.className = 'no-availability';
                     noSlots.textContent = 'No time slots available this day.';
                     daySection.appendChild(noSlots);
                 } else {
-                    // Display each time slot
-                    dayData.time_slot.forEach((slot, slotIndex) => {
-                        const slotDiv = document.createElement('div');
-                        slotDiv.className = 'time-slot';
-                        
-                        const startTime = slot.start || 'Not specified';
-                        const endTime = slot.end || 'Not specified';
-                        
-                        slotDiv.innerHTML = `
-                            <strong>Slot ${slotIndex + 1}:</strong>
-                            <span>${startTime} - ${endTime}</span>
-                        `;
-                        
-                        daySection.appendChild(slotDiv);
-                    });
+                    // Convert time_slot object to array if it's not already
+                    const timeSlots = Array.isArray(dayData.time_slot) 
+                        ? dayData.time_slot 
+                        : Object.values(dayData.time_slot);
+                    
+                    if (timeSlots.length === 0) {
+                        const noSlots = document.createElement('p');
+                        noSlots.className = 'no-availability';
+                        noSlots.textContent = 'No time slots available this day.';
+                        daySection.appendChild(noSlots);
+                    } else {
+                        // Display each time slot
+                        timeSlots.forEach((slot, slotIndex) => {
+                            if (slot && (slot.start || slot.end)) {
+                                const slotDiv = document.createElement('div');
+                                slotDiv.className = 'time-slot';
+                                
+                                const startTime = slot.start || 'Not specified';
+                                const endTime = slot.end || 'Not specified';
+                                
+                                slotDiv.innerHTML = `
+                                    <strong>Slot ${slotIndex + 1}:</strong>
+                                    <span>${startTime} - ${endTime}</span>
+                                `;
+                                
+                                daySection.appendChild(slotDiv);
+                            }
+                        });
+                    }
                 }
                 
                 availabilityContainer.appendChild(daySection);
@@ -156,6 +169,7 @@
                 
                 // Get the first document (since we limited to 1)
                 const doc = querySnapshot.docs[0];
+                console.log("Retrieved document data:", doc.data()); // For debugging
                 displayAvailability(doc.data());
             } catch (error) {
                 console.error('Error fetching document:', error);
