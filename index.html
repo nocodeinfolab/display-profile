@@ -346,6 +346,88 @@
                 grid-template-columns: 1fr;
             }
         }
+
+                /* Add these to your existing styles */
+
+        /* Base responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+                padding: 20px;
+            }
+            
+            .profile-picture {
+                width: 150px;
+                height: 150px;
+                margin: 0 auto 20px;
+            }
+            
+            .profile-details {
+                justify-content: center;
+            }
+            
+            .section {
+                padding: 15px;
+            }
+            
+            .day-card {
+                padding: 15px;
+            }
+            
+            .time-slots-container {
+                flex-direction: column;
+            }
+            
+            .time-slot {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .time-text-input {
+                width: 100px;
+            }
+            
+            .location-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* For very small devices */
+        @media (max-width: 480px) {
+            .profile-name {
+                font-size: 1.5rem;
+            }
+            
+            .profile-role {
+                font-size: 1rem;
+            }
+            
+            .section-title {
+                font-size: 1.2rem;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .edit-btn, .save-btn, .cancel-btn, .add-day-btn, .add-time-btn {
+                width: 100%;
+                margin-top: 10px;
+            }
+            
+            .day-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .remove-day {
+                margin-top: 10px;
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
