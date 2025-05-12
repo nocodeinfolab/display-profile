@@ -598,6 +598,7 @@
         }
 
         // Function to add an editable day
+        // Function to add an editable day (modified to use text inputs)
         function addEditableDay(dayName = '', timeSlots = [{ start: '', end: '' }]) {
             const dayId = 'day-' + Date.now();
             const dayElement = document.createElement('div');
@@ -614,15 +615,16 @@
                 <div class="time-slots-container" id="${dayId}-slots">
                     ${timeSlots.map((slot, index) => `
                         <div class="time-slot">
-                            <input type="time" class="time-input" value="${slot.start || ''}">
+                            <input type="text" class="time-text-input" value="${slot.start || ''}" placeholder="9:00 AM">
                             <span>to</span>
-                            <input type="time" class="time-input" value="${slot.end || ''}">
+                            <input type="text" class="time-text-input" value="${slot.end || ''}" placeholder="5:00 PM">
                             <button class="remove-slot" onclick="removeTimeSlot(this)">
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>
                     `).join('')}
                 </div>
+                <p class="time-format-hint">Use format like: 9:00 AM, 1:30 PM</p>
                 <button class="add-time-btn" onclick="addTimeSlot('${dayId}-slots')">
                     <i class="fas fa-plus"></i> Add Time Slot
                 </button>
@@ -631,15 +633,15 @@
             elements.availabilityEditContainer.appendChild(dayElement);
         }
 
-        // Function to add a time slot to a day
+        // Function to add a time slot to a day (modified to use text inputs)
         window.addTimeSlot = function(containerId) {
             const container = document.getElementById(containerId);
             const newSlot = document.createElement('div');
             newSlot.className = 'time-slot';
             newSlot.innerHTML = `
-                <input type="time" class="time-input">
+                <input type="text" class="time-text-input" placeholder="9:00 AM">
                 <span>to</span>
-                <input type="time" class="time-input">
+                <input type="text" class="time-text-input" placeholder="5:00 PM">
                 <button class="remove-slot" onclick="removeTimeSlot(this)">
                     <i class="fas fa-times"></i>
                 </button>
@@ -670,12 +672,12 @@
         function getEditedAvailability() {
             const days = Array.from(document.querySelectorAll('.day-card'));
             return days.map(day => {
-                const dayName = day.querySelector('.day-title-input').value.trim();
+                const dayName = day.querySelector('.day-title-input')?.value.trim();
                 const timeSlots = Array.from(day.querySelectorAll('.time-slots-container .time-slot')).map(slot => {
-                    const inputs = slot.querySelectorAll('.time-input');
+                    const inputs = slot.querySelectorAll('.time-text-input');
                     return {
-                        start: inputs[0].value.trim(),
-                        end: inputs[1].value.trim()
+                        start: inputs[0]?.value.trim(),
+                        end: inputs[1]?.value.trim()
                     };
                 }).filter(slot => slot.start && slot.end); // Only include slots with both times
 
@@ -686,10 +688,13 @@
             }).filter(day => day.day && day.time_slots.length > 0); // Only include days with name and at least one valid slot
         }
 
-        // Function to save changes to Firestore
+        // Function to save changes to Firestore (modified to handle errors better)
         async function saveChanges() {
             const email = getQueryParam('email');
-            if (!email || !providerData) return;
+            if (!email || !providerData) {
+                showError('No provider data loaded.');
+                return;
+            }
 
             try {
                 // Get the document reference
@@ -704,17 +709,42 @@
                 }
 
                 const docRef = querySnapshot.docs[0].ref;
+                const editedLocation = getEditedLocation();
+                const editedAvailability = getEditedAvailability();
+
+                // Validate the data
+                if (!editedLocation.city || !editedLocation.country) {
+                    showError('Please provide at least city and country.');
+                    return;
+                }
+
+                if (editedAvailability.length === 0) {
+                    showError('Please provide at least one day with time slots.');
+                    return;
+                }
 
                 // Update the document
                 await docRef.update({
-                    location: getEditedLocation(),
-                    availability: getEditedAvailability()
+                    location: editedLocation,
+                    availability: editedAvailability
                 });
 
-                // Reload the data
-                await fetchProviderData();
+                // Update our local data and UI
+                providerData.location = editedLocation;
+                providerData.availability = editedAvailability;
+                originalLocation = {...editedLocation};
+                originalAvailability = JSON.parse(JSON.stringify(editedAvailability));
+
+                displayLocation(providerData.location);
+                displayAvailability(providerData.availability);
                 toggleEditMode('location', false);
                 toggleEditMode('availability', false);
+
+                // Show success message
+                showError('Changes saved successfully!');
+                setTimeout(() => {
+                    elements.error.style.display = 'none';
+                }, 3000);
             } catch (error) {
                 console.error('Error updating document:', error);
                 showError('Failed to save changes. Please try again.');
