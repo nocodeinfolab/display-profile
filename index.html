@@ -59,6 +59,7 @@
             messagingSenderId: "455712351090",
             appId: "1:455712351090:web:8df100aa7cc657bd31f3eb"
         };
+
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
@@ -83,8 +84,12 @@
                 return;
             }
             
-            // Display provider info (assuming email is a field in the document)
-            providerInfoDiv.innerHTML = `<h2>${providerData.email || 'Provider'}</h2>`;
+            // Display provider info
+            providerInfoDiv.innerHTML = `
+                <h2>${providerData.full_name || 'Provider'}</h2>
+                <p><strong>Role:</strong> ${providerData.role || 'Not specified'}</p>
+                <p><strong>Email:</strong> ${providerData.email || 'Not specified'}</p>
+            `;
             
             // Check if availability exists and is an array
             if (!providerData.availability || !Array.isArray(providerData.availability)) {
@@ -93,49 +98,46 @@
             }
             
             // Display each day's availability
-            providerData.availability.forEach((dayData, index) => {
+            providerData.availability.forEach((dayData) => {
+                if (!dayData) return;
+                
                 const daySection = document.createElement('div');
                 daySection.className = 'day-section';
                 
                 const dayHeader = document.createElement('h3');
-                dayHeader.textContent = dayData.day || `Day ${index + 1}`;
+                dayHeader.textContent = dayData.day || 'Unnamed Day';
                 daySection.appendChild(dayHeader);
                 
-                // Check if time slots exist - now checking for object properties
-                if (!dayData.time_slots || typeof dayData.time_slots !== 'object') {
+                // Check if time_slots exists and is an array
+                if (!dayData.time_slots || !Array.isArray(dayData.time_slots)) {
                     const noSlots = document.createElement('p');
                     noSlots.className = 'no-availability';
                     noSlots.textContent = 'No time slots available this day.';
                     daySection.appendChild(noSlots);
                 } else {
-                    // Convert time_slot object to array if it's not already
-                    const timeSlots = Array.isArray(dayData.time_slots) 
-                        ? dayData.time_slot 
-                        : Object.values(dayData.time_slots);
+                    // Display each time slot
+                    dayData.time_slots.forEach((slot, slotIndex) => {
+                        if (slot && (slot.start || slot.end)) {
+                            const slotDiv = document.createElement('div');
+                            slotDiv.className = 'time-slot';
+                            
+                            const startTime = slot.start || 'Not specified';
+                            const endTime = slot.end || 'Not specified';
+                            
+                            slotDiv.innerHTML = `
+                                <strong>Time Slot ${slotIndex + 1}:</strong>
+                                <span>${startTime} - ${endTime}</span>
+                            `;
+                            
+                            daySection.appendChild(slotDiv);
+                        }
+                    });
                     
-                    if (timeSlots.length === 0) {
+                    if (daySection.children.length === 1) { // Only the header exists
                         const noSlots = document.createElement('p');
                         noSlots.className = 'no-availability';
-                        noSlots.textContent = 'No time slots available this day.';
+                        noSlots.textContent = 'No valid time slots available this day.';
                         daySection.appendChild(noSlots);
-                    } else {
-                        // Display each time slot
-                        timeSlots.forEach((slot, slotIndex) => {
-                            if (slot && (slot.start || slot.end)) {
-                                const slotDiv = document.createElement('div');
-                                slotDiv.className = 'time-slot';
-                                
-                                const startTime = slot.start || 'Not specified';
-                                const endTime = slot.end || 'Not specified';
-                                
-                                slotDiv.innerHTML = `
-                                    <strong>Slot ${slotIndex + 1}:</strong>
-                                    <span>${startTime} - ${endTime}</span>
-                                `;
-                                
-                                daySection.appendChild(slotDiv);
-                            }
-                        });
                     }
                 }
                 
@@ -169,7 +171,7 @@
                 
                 // Get the first document (since we limited to 1)
                 const doc = querySnapshot.docs[0];
-                console.log("Retrieved document data:", doc.data()); // For debugging
+                console.log("Retrieved document data:", doc.data());
                 displayAvailability(doc.data());
             } catch (error) {
                 console.error('Error fetching document:', error);
