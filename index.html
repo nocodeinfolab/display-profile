@@ -102,16 +102,16 @@
                 daySection.appendChild(dayHeader);
                 
                 // Check if time slots exist - now checking for object properties
-                if (!dayData.time_slot || typeof dayData.time_slot !== 'object') {
+                if (!dayData.time_slots || typeof dayData.time_slots !== 'object') {
                     const noSlots = document.createElement('p');
                     noSlots.className = 'no-availability';
                     noSlots.textContent = 'No time slots available this day.';
                     daySection.appendChild(noSlots);
                 } else {
                     // Convert time_slot object to array if it's not already
-                    const timeSlots = Array.isArray(dayData.time_slot) 
+                    const timeSlots = Array.isArray(dayData.time_slots) 
                         ? dayData.time_slot 
-                        : Object.values(dayData.time_slot);
+                        : Object.values(dayData.time_slots);
                     
                     if (timeSlots.length === 0) {
                         const noSlots = document.createElement('p');
