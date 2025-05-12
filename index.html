@@ -3,51 +3,433 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Care Provider Availability</title>
+    <title>Care Provider Profile</title>
     <!-- Include Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <!-- Include Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #6b8cae;
+            --accent-color: #ff7e5f;
+            --light-bg: #f8f9fa;
+            --dark-text: #2c3e50;
+            --light-text: #7f8c8d;
+            --white: #ffffff;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
-            margin: 20px;
-            max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
+            color: var(--dark-text);
+            background-color: var(--light-bg);
+            padding: 20px;
         }
-        h1 {
-            color: #2c3e50;
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
         }
-        .day-section {
-            background-color: #f8f9fa;
-            padding: 15px;
+
+        .profile-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            background-color: var(--white);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .profile-picture {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 5px solid var(--white);
+            box-shadow: var(--box-shadow);
+        }
+
+        .profile-info {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .profile-name {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+
+        .profile-role {
+            font-size: 1.2rem;
+            color: var(--secondary-color);
             margin-bottom: 15px;
-            border-radius: 5px;
+            font-weight: 500;
         }
+
+        .profile-bio {
+            margin-bottom: 20px;
+            color: var(--dark-text);
+            line-height: 1.7;
+        }
+
+        .profile-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+        }
+
+        .detail-item i {
+            color: var(--accent-color);
+        }
+
+        .section {
+            background-color: var(--white);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--light-bg);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .edit-btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .edit-btn:hover {
+            background-color: #e66a4d;
+            transform: translateY(-2px);
+        }
+
+        .save-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-left: 10px;
+        }
+
+        .save-btn:hover {
+            background-color: #3a5a8f;
+            transform: translateY(-2px);
+        }
+
+        .cancel-btn {
+            background-color: var(--light-text);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .cancel-btn:hover {
+            background-color: #6d7b84;
+            transform: translateY(-2px);
+        }
+
+        .location-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .location-field {
+            margin-bottom: 15px;
+        }
+
+        .location-field label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: var(--secondary-color);
+        }
+
+        .location-field input, .location-field select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-family: inherit;
+        }
+
+        .availability-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .day-card {
+            background-color: var(--light-bg);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            position: relative;
+        }
+
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .day-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .remove-day {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .time-slots-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
         .time-slot {
-            background-color: white;
-            padding: 8px 12px;
-            margin: 5px 0;
-            border-radius: 3px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            background-color: var(--white);
+            padding: 10px 15px;
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
-        .no-availability {
-            color: #7f8c8d;
-            font-style: italic;
+
+        .time-input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: inherit;
         }
+
+        .add-time-btn, .add-day-btn {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .add-time-btn:hover, .add-day-btn:hover {
+            background-color: #5a7b9e;
+        }
+
+        .remove-slot {
+            color: #e74c3c;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 1rem;
+        }
+
+        .chip-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .chip {
+            background-color: var(--light-bg);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+        }
+
         .loading {
-            color: #3498db;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100px;
+            color: var(--primary-color);
+            font-size: 1.2rem;
         }
+
         .error {
             color: #e74c3c;
+            padding: 20px;
+            text-align: center;
+            background-color: #fdecea;
+            border-radius: var(--border-radius);
+        }
+
+        .edit-mode {
+            background-color: #fffaf0;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        @media (max-width: 768px) {
+            .profile-header {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+            
+            .profile-details {
+                justify-content: center;
+            }
+            
+            .location-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>Care Provider Availability</h1>
-    <div id="provider-info"></div>
-    <div id="availability-container"></div>
+    <div class="container">
+        <div id="profile-header" class="profile-header">
+            <!-- Profile header will be populated by JavaScript -->
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Professional Information</h2>
+            <div id="professional-info">
+                <!-- Professional info will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">
+                <span>Location</span>
+                <button id="edit-location-btn" class="edit-btn">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+            </div>
+            <div id="location-display">
+                <!-- Location info will be populated by JavaScript -->
+            </div>
+            <div id="location-edit" style="display: none;">
+                <div class="location-grid">
+                    <div class="location-field">
+                        <label for="edit-city">City</label>
+                        <input type="text" id="edit-city" class="location-input">
+                    </div>
+                    <div class="location-field">
+                        <label for="edit-state">State</label>
+                        <input type="text" id="edit-state" class="location-input">
+                    </div>
+                    <div class="location-field">
+                        <label for="edit-country">Country</label>
+                        <input type="text" id="edit-country" class="location-input">
+                    </div>
+                </div>
+                <div style="margin-top: 20px;">
+                    <button id="save-location-btn" class="save-btn">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                    <button id="cancel-location-btn" class="cancel-btn">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">
+                <span>Availability</span>
+                <button id="edit-availability-btn" class="edit-btn">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+            </div>
+            <div id="availability-display">
+                <!-- Availability will be populated by JavaScript -->
+            </div>
+            <div id="availability-edit" style="display: none;">
+                <div id="availability-edit-container" class="availability-container">
+                    <!-- Editable availability will be populated by JavaScript -->
+                </div>
+                <button id="add-day-btn" class="add-day-btn">
+                    <i class="fas fa-plus"></i> Add Day
+                </button>
+                <div style="margin-top: 20px;">
+                    <button id="save-availability-btn" class="save-btn">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                    <button id="cancel-availability-btn" class="cancel-btn">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="loading" class="loading">
+            <i class="fas fa-spinner fa-spin"></i> Loading profile data...
+        </div>
+        <div id="error-message" class="error" style="display: none;"></div>
+    </div>
 
     <script>
         // Your Firebase configuration
@@ -64,123 +446,383 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
+        // DOM elements
+        const elements = {
+            loading: document.getElementById('loading'),
+            error: document.getElementById('error-message'),
+            profileHeader: document.getElementById('profile-header'),
+            professionalInfo: document.getElementById('professional-info'),
+            locationDisplay: document.getElementById('location-display'),
+            locationEdit: document.getElementById('location-edit'),
+            availabilityDisplay: document.getElementById('availability-display'),
+            availabilityEdit: document.getElementById('availability-edit'),
+            availabilityEditContainer: document.getElementById('availability-edit-container'),
+            editLocationBtn: document.getElementById('edit-location-btn'),
+            saveLocationBtn: document.getElementById('save-location-btn'),
+            cancelLocationBtn: document.getElementById('cancel-location-btn'),
+            editAvailabilityBtn: document.getElementById('edit-availability-btn'),
+            saveAvailabilityBtn: document.getElementById('save-availability-btn'),
+            cancelAvailabilityBtn: document.getElementById('cancel-availability-btn'),
+            addDayBtn: document.getElementById('add-day-btn')
+        };
+
+        // Global variables
+        let providerData = null;
+        let originalLocation = null;
+        let originalAvailability = null;
+
         // Function to get query parameter from URL
         function getQueryParam(name) {
             const urlParams = new URLSearchParams(window.location.search);
             return urlParams.get(name);
         }
 
-        // Function to display the availability data
-        function displayAvailability(providerData) {
-            const providerInfoDiv = document.getElementById('provider-info');
-            const availabilityContainer = document.getElementById('availability-container');
-            
-            // Clear previous content
-            providerInfoDiv.innerHTML = '';
-            availabilityContainer.innerHTML = '';
-            
-            if (!providerData) {
-                availabilityContainer.innerHTML = '<p class="error">No provider data found.</p>';
-                return;
-            }
-            
-            // Display provider info
-            providerInfoDiv.innerHTML = `
-                <h2>${providerData.full_name || 'Provider'}</h2>
-                <p><strong>Role:</strong> ${providerData.role || 'Not specified'}</p>
-                <p><strong>Email:</strong> ${providerData.email || 'Not specified'}</p>
+        // Function to display profile header
+        function displayProfileHeader(data) {
+            elements.profileHeader.innerHTML = `
+                <img src="${data.profile_picture_url || 'https://via.placeholder.com/200'}" 
+                     alt="Profile Picture" 
+                     class="profile-picture"
+                     onerror="this.src='https://via.placeholder.com/200'">
+                <div class="profile-info">
+                    <h1 class="profile-name">${data.full_name || 'Provider'}</h1>
+                    <p class="profile-role">${data.role || 'Healthcare Professional'}</p>
+                    <p class="profile-bio">${data.bio || 'No biography provided.'}</p>
+                    <div class="profile-details">
+                        <span class="detail-item"><i class="fas fa-envelope"></i> ${data.email || 'Not specified'}</span>
+                        <span class="detail-item"><i class="fas fa-phone"></i> ${data.phone || 'Not specified'}</span>
+                        <span class="detail-item"><i class="fas fa-venus-mars"></i> ${data.gender || 'Not specified'}</span>
+                        <span class="detail-item"><i class="fas fa-award"></i> ${data.years_experience ? data.years_experience + ' years experience' : 'Experience not specified'}</span>
+                    </div>
+                </div>
             `;
-            
-            // Check if availability exists and is an array
-            if (!providerData.availability || !Array.isArray(providerData.availability)) {
-                availabilityContainer.innerHTML = '<p class="no-availability">No availability information available.</p>';
+        }
+
+        // Function to display professional information
+        function displayProfessionalInfo(data) {
+            let languagesHtml = data.languages && data.languages.length > 0 
+                ? `<div class="chip-container">${data.languages.map(lang => `<span class="chip">${lang}</span>`).join('')}</div>` 
+                : '<p>No languages specified</p>';
+
+            let specializationsHtml = data.specializations && data.specializations.length > 0 
+                ? `<div class="chip-container">${data.specializations.map(spec => `<span class="chip">${spec}</span>`).join('')}</div>` 
+                : '<p>No specializations specified</p>';
+
+            elements.professionalInfo.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <h3 style="color: var(--secondary-color); margin-bottom: 10px;">License Number</h3>
+                    <p>${data.license_number || 'Not specified'}</p>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <h3 style="color: var(--secondary-color); margin-bottom: 10px;">Languages Spoken</h3>
+                    ${languagesHtml}
+                </div>
+                <div>
+                    <h3 style="color: var(--secondary-color); margin-bottom: 10px;">Specializations</h3>
+                    ${specializationsHtml}
+                </div>
+            `;
+        }
+
+        // Function to display location
+        function displayLocation(location) {
+            if (!location) {
+                elements.locationDisplay.innerHTML = '<p>Location information not available.</p>';
                 return;
             }
-            
-            // Display each day's availability
-            providerData.availability.forEach((dayData) => {
-                if (!dayData) return;
-                
-                const daySection = document.createElement('div');
-                daySection.className = 'day-section';
-                
-                const dayHeader = document.createElement('h3');
-                dayHeader.textContent = dayData.day || 'Unnamed Day';
-                daySection.appendChild(dayHeader);
-                
-                // Check if time_slots exists and is an array
-                if (!dayData.time_slots || !Array.isArray(dayData.time_slots)) {
-                    const noSlots = document.createElement('p');
-                    noSlots.className = 'no-availability';
-                    noSlots.textContent = 'No time slots available this day.';
-                    daySection.appendChild(noSlots);
-                } else {
-                    // Display each time slot
-                    dayData.time_slots.forEach((slot, slotIndex) => {
-                        if (slot && (slot.start || slot.end)) {
-                            const slotDiv = document.createElement('div');
-                            slotDiv.className = 'time-slot';
-                            
-                            const startTime = slot.start || 'Not specified';
-                            const endTime = slot.end || 'Not specified';
-                            
-                            slotDiv.innerHTML = `
-                                <strong>Time Slot ${slotIndex + 1}:</strong>
-                                <span>${startTime} - ${endTime}</span>
-                            `;
-                            
-                            daySection.appendChild(slotDiv);
-                        }
-                    });
-                    
-                    if (daySection.children.length === 1) { // Only the header exists
-                        const noSlots = document.createElement('p');
-                        noSlots.className = 'no-availability';
-                        noSlots.textContent = 'No valid time slots available this day.';
-                        daySection.appendChild(noSlots);
-                    }
-                }
-                
-                availabilityContainer.appendChild(daySection);
+
+            elements.locationDisplay.innerHTML = `
+                <div class="location-grid">
+                    <div>
+                        <h3 style="color: var(--secondary-color); margin-bottom: 5px;">City</h3>
+                        <p>${location.city || 'Not specified'}</p>
+                    </div>
+                    <div>
+                        <h3 style="color: var(--secondary-color); margin-bottom: 5px;">State</h3>
+                        <p>${location.state || 'Not specified'}</p>
+                    </div>
+                    <div>
+                        <h3 style="color: var(--secondary-color); margin-bottom: 5px;">Country</h3>
+                        <p>${location.country || 'Not specified'}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Function to display availability
+        function displayAvailability(availability) {
+            if (!availability || availability.length === 0) {
+                elements.availabilityDisplay.innerHTML = '<p>No availability information available.</p>';
+                return;
+            }
+
+            let availabilityHtml = availability.map(day => `
+                <div class="day-card">
+                    <h3 style="color: var(--primary-color); margin-bottom: 15px;">${day.day}</h3>
+                    ${day.time_slots && day.time_slots.length > 0 
+                        ? `<div class="time-slots-container">
+                            ${day.time_slots.map(slot => `
+                                <div class="time-slot">
+                                    <i class="far fa-clock"></i>
+                                    ${slot.start || '--:--'} - ${slot.end || '--:--'}
+                                </div>
+                            `).join('')}
+                           </div>`
+                        : '<p>No time slots available this day.</p>'}
+                </div>
+            `).join('');
+
+            elements.availabilityDisplay.innerHTML = availabilityHtml;
+        }
+
+        // Function to setup editable location
+        function setupEditableLocation(location) {
+            document.getElementById('edit-city').value = location?.city || '';
+            document.getElementById('edit-state').value = location?.state || '';
+            document.getElementById('edit-country').value = location?.country || '';
+        }
+
+        // Function to setup editable availability
+        function setupEditableAvailability(availability) {
+            elements.availabilityEditContainer.innerHTML = '';
+
+            if (!availability || availability.length === 0) {
+                // Add a default day if no availability exists
+                addEditableDay('Monday', [{ start: '', end: '' }]);
+                return;
+            }
+
+            availability.forEach(day => {
+                addEditableDay(day.day, day.time_slots || []);
             });
         }
 
-        // Main function to fetch and display data
-        async function fetchAndDisplayProvider() {
+        // Function to add an editable day
+        function addEditableDay(dayName = '', timeSlots = [{ start: '', end: '' }]) {
+            const dayId = 'day-' + Date.now();
+            const dayElement = document.createElement('div');
+            dayElement.className = 'day-card edit-mode';
+            dayElement.id = dayId;
+
+            dayElement.innerHTML = `
+                <div class="day-header">
+                    <input type="text" class="day-title-input" value="${dayName}" placeholder="Day (e.g., Monday)">
+                    <button class="remove-day" onclick="removeEditableDay('${dayId}')">
+                        <i class="fas fa-trash"></i> Remove
+                    </button>
+                </div>
+                <div class="time-slots-container" id="${dayId}-slots">
+                    ${timeSlots.map((slot, index) => `
+                        <div class="time-slot">
+                            <input type="time" class="time-input" value="${slot.start || ''}">
+                            <span>to</span>
+                            <input type="time" class="time-input" value="${slot.end || ''}">
+                            <button class="remove-slot" onclick="removeTimeSlot(this)">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    `).join('')}
+                </div>
+                <button class="add-time-btn" onclick="addTimeSlot('${dayId}-slots')">
+                    <i class="fas fa-plus"></i> Add Time Slot
+                </button>
+            `;
+
+            elements.availabilityEditContainer.appendChild(dayElement);
+        }
+
+        // Function to add a time slot to a day
+        window.addTimeSlot = function(containerId) {
+            const container = document.getElementById(containerId);
+            const newSlot = document.createElement('div');
+            newSlot.className = 'time-slot';
+            newSlot.innerHTML = `
+                <input type="time" class="time-input">
+                <span>to</span>
+                <input type="time" class="time-input">
+                <button class="remove-slot" onclick="removeTimeSlot(this)">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            container.appendChild(newSlot);
+        };
+
+        // Function to remove a time slot
+        window.removeTimeSlot = function(button) {
+            button.closest('.time-slot').remove();
+        };
+
+        // Function to remove an editable day
+        window.removeEditableDay = function(dayId) {
+            document.getElementById(dayId).remove();
+        };
+
+        // Function to get edited location data
+        function getEditedLocation() {
+            return {
+                city: document.getElementById('edit-city').value.trim(),
+                state: document.getElementById('edit-state').value.trim(),
+                country: document.getElementById('edit-country').value.trim()
+            };
+        }
+
+        // Function to get edited availability data
+        function getEditedAvailability() {
+            const days = Array.from(document.querySelectorAll('.day-card'));
+            return days.map(day => {
+                const dayName = day.querySelector('.day-title-input').value.trim();
+                const timeSlots = Array.from(day.querySelectorAll('.time-slots-container .time-slot')).map(slot => {
+                    const inputs = slot.querySelectorAll('.time-input');
+                    return {
+                        start: inputs[0].value.trim(),
+                        end: inputs[1].value.trim()
+                    };
+                }).filter(slot => slot.start && slot.end); // Only include slots with both times
+
+                return {
+                    day: dayName,
+                    time_slots: timeSlots
+                };
+            }).filter(day => day.day && day.time_slots.length > 0); // Only include days with name and at least one valid slot
+        }
+
+        // Function to save changes to Firestore
+        async function saveChanges() {
             const email = getQueryParam('email');
-            const loadingDiv = document.getElementById('availability-container');
-            
+            if (!email || !providerData) return;
+
+            try {
+                // Get the document reference
+                const querySnapshot = await db.collection('care_providers')
+                    .where('email', '==', email)
+                    .limit(1)
+                    .get();
+
+                if (querySnapshot.empty) {
+                    showError('Provider document not found.');
+                    return;
+                }
+
+                const docRef = querySnapshot.docs[0].ref;
+
+                // Update the document
+                await docRef.update({
+                    location: getEditedLocation(),
+                    availability: getEditedAvailability()
+                });
+
+                // Reload the data
+                await fetchProviderData();
+                toggleEditMode('location', false);
+                toggleEditMode('availability', false);
+            } catch (error) {
+                console.error('Error updating document:', error);
+                showError('Failed to save changes. Please try again.');
+            }
+        }
+
+        // Function to toggle edit mode
+        function toggleEditMode(section, showEdit) {
+            if (section === 'location') {
+                elements.locationDisplay.style.display = showEdit ? 'none' : 'block';
+                elements.locationEdit.style.display = showEdit ? 'block' : 'none';
+                elements.editLocationBtn.style.display = showEdit ? 'none' : 'block';
+            } else if (section === 'availability') {
+                elements.availabilityDisplay.style.display = showEdit ? 'none' : 'block';
+                elements.availabilityEdit.style.display = showEdit ? 'block' : 'none';
+                elements.editAvailabilityBtn.style.display = showEdit ? 'none' : 'block';
+            }
+        }
+
+        // Function to show error message
+        function showError(message) {
+            elements.error.textContent = message;
+            elements.error.style.display = 'block';
+            setTimeout(() => {
+                elements.error.style.display = 'none';
+            }, 5000);
+        }
+
+        // Function to fetch provider data
+        async function fetchProviderData() {
+            const email = getQueryParam('email');
+            elements.loading.style.display = 'flex';
+            elements.error.style.display = 'none';
+
             if (!email) {
-                loadingDiv.innerHTML = '<p class="error">No email parameter provided in URL. Please add ?email=provider@example.com to the URL.</p>';
+                showError('No email parameter provided in URL. Please add ?email=provider@example.com to the URL.');
+                elements.loading.style.display = 'none';
                 return;
             }
-            
-            loadingDiv.innerHTML = '<p class="loading">Loading provider data...</p>';
-            
+
             try {
                 // Query Firestore for the document with matching email
                 const querySnapshot = await db.collection('care_providers')
                     .where('email', '==', email)
                     .limit(1)
                     .get();
-                
+
                 if (querySnapshot.empty) {
-                    loadingDiv.innerHTML = `<p class="error">No care provider found with email: ${email}</p>`;
+                    showError(`No care provider found with email: ${email}`);
+                    elements.loading.style.display = 'none';
                     return;
                 }
-                
+
                 // Get the first document (since we limited to 1)
                 const doc = querySnapshot.docs[0];
-                console.log("Retrieved document data:", doc.data());
-                displayAvailability(doc.data());
+                providerData = doc.data();
+                originalLocation = {...providerData.location};
+                originalAvailability = JSON.parse(JSON.stringify(providerData.availability || []));
+
+                // Display the data
+                displayProfileHeader(providerData);
+                displayProfessionalInfo(providerData);
+                displayLocation(providerData.location);
+                displayAvailability(providerData.availability);
+                setupEditableLocation(providerData.location);
+                setupEditableAvailability(providerData.availability);
+
+                elements.loading.style.display = 'none';
             } catch (error) {
                 console.error('Error fetching document:', error);
-                loadingDiv.innerHTML = `<p class="error">Error loading provider data: ${error.message}</p>`;
+                showError('Error loading provider data. Please try again.');
+                elements.loading.style.display = 'none';
             }
         }
 
+        // Event listeners
+        elements.editLocationBtn.addEventListener('click', () => {
+            toggleEditMode('location', true);
+        });
+
+        elements.cancelLocationBtn.addEventListener('click', () => {
+            setupEditableLocation(originalLocation);
+            toggleEditMode('location', false);
+        });
+
+        elements.saveLocationBtn.addEventListener('click', async () => {
+            await saveChanges();
+        });
+
+        elements.editAvailabilityBtn.addEventListener('click', () => {
+            toggleEditMode('availability', true);
+        });
+
+        elements.cancelAvailabilityBtn.addEventListener('click', () => {
+            setupEditableAvailability(originalAvailability);
+            toggleEditMode('availability', false);
+        });
+
+        elements.saveAvailabilityBtn.addEventListener('click', async () => {
+            await saveChanges();
+        });
+
+        elements.addDayBtn.addEventListener('click', () => {
+            addEditableDay('', [{ start: '', end: '' }]);
+        });
+
         // When the page loads, fetch and display the data
-        document.addEventListener('DOMContentLoaded', fetchAndDisplayProvider);
+        document.addEventListener('DOMContentLoaded', fetchProviderData);
     </script>
 </body>
 </html>
