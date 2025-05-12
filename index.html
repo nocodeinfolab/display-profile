@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Care Provider Availability</title>
+    <!-- Include Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        .day-section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+        }
+        .time-slot {
+            background-color: white;
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 3px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .no-availability {
+            color: #7f8c8d;
+            font-style: italic;
+        }
+        .loading {
+            color: #3498db;
+        }
+        .error {
+            color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <h1>Care Provider Availability</h1>
+    <div id="provider-info"></div>
+    <div id="availability-container"></div>
+
+    <script>
+        // Your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDjWX_BvuRa-3-c4nhVupoVDPoQCmkcWlc",
+            authDomain: "psy-clinic-1e0b1.firebaseapp.com",
+            projectId: "psy-clinic-1e0b1",
+            storageBucket: "psy-clinic-1e0b1.firebasestorage.app",
+            messagingSenderId: "455712351090",
+            appId: "1:455712351090:web:8df100aa7cc657bd31f3eb"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Function to get query parameter from URL
+        function getQueryParam(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        // Function to display the availability data
+        function displayAvailability(providerData) {
+            const providerInfoDiv = document.getElementById('provider-info');
+            const availabilityContainer = document.getElementById('availability-container');
+            
+            // Clear previous content
+            providerInfoDiv.innerHTML = '';
+            availabilityContainer.innerHTML = '';
+            
+            if (!providerData) {
+                availabilityContainer.innerHTML = '<p class="error">No provider data found.</p>';
+                return;
+            }
+            
+            // Display provider info (assuming email is a field in the document)
+            providerInfoDiv.innerHTML = `<h2>${providerData.email || 'Provider'}</h2>`;
+            
+            // Check if availability exists and is an array
+            if (!providerData.availability || !Array.isArray(providerData.availability)) {
+                availabilityContainer.innerHTML = '<p class="no-availability">No availability information available.</p>';
+                return;
+            }
+            
+            // Display each day's availability
+            providerData.availability.forEach((dayData, index) => {
+                const daySection = document.createElement('div');
+                daySection.className = 'day-section';
+                
+                const dayHeader = document.createElement('h3');
+                dayHeader.textContent = dayData.day || `Day ${index + 1}`;
+                daySection.appendChild(dayHeader);
+                
+                // Check if time slots exist
+                if (!dayData.time_slot || !Array.isArray(dayData.time_slot) || dayData.time_slot.length === 0) {
+                    const noSlots = document.createElement('p');
+                    noSlots.className = 'no-availability';
+                    noSlots.textContent = 'No time slots available this day.';
+                    daySection.appendChild(noSlots);
+                } else {
+                    // Display each time slot
+                    dayData.time_slot.forEach((slot, slotIndex) => {
+                        const slotDiv = document.createElement('div');
+                        slotDiv.className = 'time-slot';
+                        
+                        const startTime = slot.start || 'Not specified';
+                        const endTime = slot.end || 'Not specified';
+                        
+                        slotDiv.innerHTML = `
+                            <strong>Slot ${slotIndex + 1}:</strong>
+                            <span>${startTime} - ${endTime}</span>
+                        `;
+                        
+                        daySection.appendChild(slotDiv);
+                    });
+                }
+                
+                availabilityContainer.appendChild(daySection);
+            });
+        }
+
+        // Main function to fetch and display data
+        async function fetchAndDisplayProvider() {
+            const email = getQueryParam('email');
+            const loadingDiv = document.getElementById('availability-container');
+            
+            if (!email) {
+                loadingDiv.innerHTML = '<p class="error">No email parameter provided in URL. Please add ?email=provider@example.com to the URL.</p>';
+                return;
+            }
+            
+            loadingDiv.innerHTML = '<p class="loading">Loading provider data...</p>';
+            
+            try {
+                // Query Firestore for the document with matching email
+                const querySnapshot = await db.collection('care_providers')
+                    .where('email', '==', email)
+                    .limit(1)
+                    .get();
+                
+                if (querySnapshot.empty) {
+                    loadingDiv.innerHTML = `<p class="error">No care provider found with email: ${email}</p>`;
+                    return;
+                }
+                
+                // Get the first document (since we limited to 1)
+                const doc = querySnapshot.docs[0];
+                displayAvailability(doc.data());
+            } catch (error) {
+                console.error('Error fetching document:', error);
+                loadingDiv.innerHTML = `<p class="error">Error loading provider data: ${error.message}</p>`;
+            }
+        }
+
+        // When the page loads, fetch and display the data
+        document.addEventListener('DOMContentLoaded', fetchAndDisplayProvider);
+    </script>
+</body>
+</html>
